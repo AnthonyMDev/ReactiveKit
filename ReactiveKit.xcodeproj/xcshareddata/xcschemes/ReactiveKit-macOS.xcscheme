@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "16C33AF81BEFB72500A0DBE0"
+               BlueprintIdentifier = "16C33B231BEFBA0100A0DBE0"
                BuildableName = "ReactiveKit.framework"
-               BlueprintName = "ReactiveKit-tvOS"
+               BlueprintName = "ReactiveKit-macOS"
                ReferencedContainer = "container:ReactiveKit.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,9 +45,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "16C33AF81BEFB72500A0DBE0"
+            BlueprintIdentifier = "16C33B231BEFBA0100A0DBE0"
             BuildableName = "ReactiveKit.framework"
-            BlueprintName = "ReactiveKit-tvOS"
+            BlueprintName = "ReactiveKit-macOS"
             ReferencedContainer = "container:ReactiveKit.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -63,9 +63,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "16C33AF81BEFB72500A0DBE0"
+            BlueprintIdentifier = "16C33B231BEFBA0100A0DBE0"
             BuildableName = "ReactiveKit.framework"
-            BlueprintName = "ReactiveKit-tvOS"
+            BlueprintName = "ReactiveKit-macOS"
             ReferencedContainer = "container:ReactiveKit.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
