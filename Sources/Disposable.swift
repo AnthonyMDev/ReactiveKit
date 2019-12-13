@@ -365,6 +365,31 @@ public final class AnyCancellable: Disposable {
     }
 }
 
+extension AnyCancellable: Hashable {
+  public static func == (lhs: AnyCancellable, rhs: AnyCancellable) -> Bool {
+    return lhs === rhs
+  }
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(ObjectIdentifier(self))
+  }
+}
+
+extension AnyCancellable {
+
+    public convenience init(_ disposable: Disposable) {
+        self.init(disposable.dispose)
+    }
+
+    final public func store<C>(in collection: inout C) where C: RangeReplaceableCollection, C.Element == AnyCancellable {
+        collection.append(self)
+    }
+
+    final public func store(in set: inout Set<AnyCancellable>) {
+        set.insert(self)
+    }
+}
+
 extension Disposable {
     
     /// Put the disposable in the given bag. Disposable will be disposed when

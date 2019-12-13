@@ -41,14 +41,17 @@ class SignalTests: XCTestCase {
     }
 
     func testDisposing() {
-        let disposable = SimpleDisposable()
+        let e = expectation(description: "Disposed")
+        let disposable = BlockDisposable {
+            e.fulfill()
+        }
 
         let operation = Signal<Int, TestError> { _ in
             return disposable
         }
 
         operation.observe { _ in }.dispose()
-        XCTAssertTrue(disposable.isDisposed)
+        wait(for: [e], timeout: 1)
     }
 
     func testJust() {
@@ -113,7 +116,7 @@ class SignalTests: XCTestCase {
     }
     
     func testScanForThreadSafety() {
-        let subject = Subject<Int, TestError>()
+        let subject = PassthroughSubject<Int, TestError>()
         let scanned = subject.scan(0, +)
         let disposeBag = DisposeBag()
         let exp = expectation(description: "race_condition?")
@@ -302,8 +305,8 @@ class SignalTests: XCTestCase {
     }
     
     func testCombineLatestWithForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let combined = subjectOne.combineLatest(with: subjectTwo)
         
         let disposeBag = DisposeBag()
@@ -347,8 +350,8 @@ class SignalTests: XCTestCase {
     }
     
     func testZipWithForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let combined = subjectOne.zip(with: subjectTwo)
         
         let disposeBag = DisposeBag()
@@ -405,7 +408,7 @@ class SignalTests: XCTestCase {
     }
     
     func testRetryForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
         let retry = subjectOne.retry(3)
         
         let disposeBag = DisposeBag()
@@ -428,11 +431,16 @@ class SignalTests: XCTestCase {
     // TODO: delay
 
     func testDoOn() {
+        let e = expectation(description: "Disposed")
         let operation = Signal<Int, Never>(sequence: [1, 2, 3])
         var start = 0
         var next = 0
         var completed = 0
-        var disposed = 0
+        var disposed = 0 {
+            didSet {
+                e.fulfill()
+            }
+        }
 
         let d = operation.handleEvents(receiveSubscription: { start += 1 }, receiveOutput: { _ in next += 1 }, receiveCompletion: { _ in completed += 1 }, receiveCancel: { disposed += 1 }).sink { _ in }
 
@@ -441,7 +449,7 @@ class SignalTests: XCTestCase {
         XCTAssert(completed == 1)
 
         d.dispose()
-        XCTAssert(disposed == 1)
+        wait(for: [e], timeout: 1)
     }
 
     func testobserveIn() {
@@ -488,7 +496,7 @@ class SignalTests: XCTestCase {
         let exp = expectation(description: "race_condition?")
         exp.expectedFulfillmentCount = 10000
         for _ in 0..<exp.expectedFulfillmentCount {
-            let subject = Subject<Int, TestError>()
+            let subject = PassthroughSubject<Int, TestError>()
             let timeout = subject.timeout(after: 1, with: .Error)
             let disposeBag = DisposeBag()
             timeout.stress(with: [subject], eventsCount: 10, expectation: exp).dispose(in: disposeBag)
@@ -515,8 +523,8 @@ class SignalTests: XCTestCase {
     }
 
     func testAmbForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let combined = subjectOne.amb(with: subjectTwo)
         
         let disposeBag = DisposeBag()
@@ -573,8 +581,8 @@ class SignalTests: XCTestCase {
     }
     
     func testWithLatestFromForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let merged = subjectOne.with(latestFrom: subjectTwo)
         
         let disposeBag = DisposeBag()
@@ -624,8 +632,8 @@ class SignalTests: XCTestCase {
     }
     
     func testFlatMapMergeForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let merged = subjectOne.flatMapMerge { _ in subjectTwo }
         
         let disposeBag = DisposeBag()
@@ -657,8 +665,8 @@ class SignalTests: XCTestCase {
     }
     
     func testFlatMapLatestForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let merged = subjectOne.flatMapLatest { _ in subjectTwo }
         
         let disposeBag = DisposeBag()
@@ -689,8 +697,8 @@ class SignalTests: XCTestCase {
     }
     
     func testFlatMapConcatForThreadSafety() {
-        let subjectOne = Subject<Int, TestError>()
-        let subjectTwo = Subject<Int, TestError>()
+        let subjectOne = PassthroughSubject<Int, TestError>()
+        let subjectTwo = PassthroughSubject<Int, TestError>()
         let merged = subjectOne.flatMapConcat { _ in subjectTwo }
         
         let disposeBag = DisposeBag()
@@ -738,8 +746,8 @@ class SignalTests: XCTestCase {
     }
     
     func testReplayLatestWithForThreadSafety() {
-        let subjectOne = Subject<Int, Never>()
-        let subjectTwo = Subject<Int, Never>()
+        let subjectOne = PassthroughSubject<Int, Never>()
+        let subjectTwo = PassthroughSubject<Int, Never>()
         let combined = subjectOne.replayLatest(when: subjectTwo)
         
         let disposeBag = DisposeBag()
@@ -761,6 +769,20 @@ class SignalTests: XCTestCase {
         published.expectNoEvent()
 
         XCTAssertEqual(bob.numberOfRuns, 2)
+    }
+  
+    func testAnyCancallableHashable() {
+      let emptyClosure: () -> Void = { }
+      
+      let cancellable1 = AnyCancellable(emptyClosure)
+      let cancellable2 = AnyCancellable(emptyClosure)
+      let cancellable3 = AnyCancellable { print("Disposed") }
+      let cancellable4 = cancellable3
+      
+      XCTAssertNotEqual(cancellable1, cancellable2)
+      XCTAssertNotEqual(cancellable1, cancellable3)
+      XCTAssertEqual(cancellable3, cancellable4)
+      
     }
 
     #if  os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
@@ -848,7 +870,8 @@ extension SignalTests {
             ("testFlatMapConcat", testFlatMapConcat),
             ("testReplay", testReplay),
             ("testPublish", testPublish),
-            ("testReplayLatestWith", testReplayLatestWith)
+            ("testReplayLatestWith", testReplayLatestWith),
+            ("testAnyCancallableHashable", testAnyCancallableHashable)
         ]
     }
 }
